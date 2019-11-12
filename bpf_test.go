@@ -23,7 +23,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"syscall"
 	"testing"
 	"unsafe"
 
@@ -71,19 +70,23 @@ type leaf struct {
 var kernelVersion uint32
 
 var (
+	kernelVersion310 uint32
 	kernelVersion46  uint32
 	kernelVersion47  uint32
 	kernelVersion48  uint32
 	kernelVersion410 uint32
 	kernelVersion412 uint32
+	kernelVersion418 uint32
 )
 
 func init() {
+	kernelVersion310, _ = elf.KernelVersionFromReleaseString("3.10.0")
 	kernelVersion46, _ = elf.KernelVersionFromReleaseString("4.6.0")
 	kernelVersion47, _ = elf.KernelVersionFromReleaseString("4.7.0")
 	kernelVersion48, _ = elf.KernelVersionFromReleaseString("4.8.0")
 	kernelVersion410, _ = elf.KernelVersionFromReleaseString("4.10.0")
 	kernelVersion412, _ = elf.KernelVersionFromReleaseString("4.12.0")
+	kernelVersion418, _ = elf.KernelVersionFromReleaseString("4.18.0")
 }
 
 func TestModuleLoadBCC(t *testing.T) {
@@ -295,15 +298,6 @@ func containsTracepointProg(tracepointProgs []*elf.TracepointProgram, name strin
 	return false
 }
 
-func containsSocketFilter(socketFilters []*elf.SocketFilter, name string) bool {
-	for _, c := range socketFilters {
-		if c.Name == name {
-			return true
-		}
-	}
-	return false
-}
-
 func checkMaps(t *testing.T, b *elf.Module) {
 	var expectedMaps = []string{
 		"dummy_hash",
@@ -436,43 +430,6 @@ func checkTracepointProgs(t *testing.T, b *elf.Module) {
 	}
 }
 
-func checkSocketFilters(t *testing.T, b *elf.Module) {
-	var expectedSocketFilters = []string{
-		"socket/dummy",
-	}
-
-	var socketFilters []*elf.SocketFilter
-	for sf := range b.IterSocketFilter() {
-		socketFilters = append(socketFilters, sf)
-	}
-	if len(socketFilters) != len(expectedSocketFilters) {
-		t.Fatalf("unexpected number of socket filters. Got %d, expected %d", len(socketFilters), len(expectedSocketFilters))
-	}
-	for _, sf := range expectedSocketFilters {
-		if !containsSocketFilter(socketFilters, sf) {
-			t.Fatalf("socket filter %q not found", sf)
-		}
-	}
-
-	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, syscall.ETH_P_ALL)
-	if err != nil {
-		t.Fatalf("unable to open a raw socket: %s", err)
-	}
-	defer syscall.Close(fd)
-
-	socketFilter := b.SocketFilter("socket/dummy")
-	if socketFilter == nil {
-		t.Fatal("socket filter dummy not found")
-	}
-
-	if err := elf.AttachSocketFilter(socketFilter, fd); err != nil {
-		t.Fatalf("failed trying to attach socket filter: %s", err)
-	}
-
-	if err := elf.DetachSocketFilter(socketFilter, fd); err != nil {
-		t.Fatalf("failed trying to detach socket filter: %s", err)
-	}
-}
 
 func checkPinConfig(t *testing.T, expectedPaths []string) {
 	for _, p := range expectedPaths {
@@ -654,7 +611,6 @@ func TestModuleLoadELF(t *testing.T) {
 	checkProbes(t, b)
 	checkUprobes(t, b)
 	checkCgroupProgs(t, b)
-	checkSocketFilters(t, b)
 	checkTracepointProgs(t, b)
 	checkPinConfig(t, []string{"/sys/fs/bpf/gobpf-test/testgroup1"})
 	checkUpdateDeleteElement(t, b)

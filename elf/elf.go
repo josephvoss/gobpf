@@ -559,7 +559,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 			isUretprobe := strings.HasPrefix(secName, "uretprobe/")
 			isCgroupSkb := strings.HasPrefix(secName, "cgroup/skb")
 			isCgroupSock := strings.HasPrefix(secName, "cgroup/sock")
-			isSocketFilter := strings.HasPrefix(secName, "socket")
 			isTracepoint := strings.HasPrefix(secName, "tracepoint/")
 			isSchedCls := strings.HasPrefix(secName, "sched_cls/")
 			isSchedAct := strings.HasPrefix(secName, "sched_act/")
@@ -579,8 +578,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 				progType = uint32(C.BPF_PROG_TYPE_CGROUP_SKB)
 			case isCgroupSock:
 				progType = uint32(C.BPF_PROG_TYPE_CGROUP_SOCK)
-			case isSocketFilter:
-				progType = uint32(C.BPF_PROG_TYPE_SOCKET_FILTER)
 			case isTracepoint:
 				progType = uint32(C.BPF_PROG_TYPE_TRACEPOINT)
 			case isSchedCls:
@@ -602,7 +599,7 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 				}
 			}
 
-			if isKprobe || isKretprobe || isUprobe || isUretprobe || isCgroupSkb || isCgroupSock || isSocketFilter || isTracepoint || isSchedCls || isSchedAct {
+			if isKprobe || isKretprobe || isUprobe || isUretprobe || isCgroupSkb || isCgroupSock || isTracepoint || isSchedCls || isSchedAct {
 				rdata, err := rsection.Data()
 				if err != nil {
 					return err
@@ -654,12 +651,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 						insns: insns,
 						fd:    int(progFd),
 					}
-				case isSocketFilter:
-					b.socketFilters[secName] = &SocketFilter{
-						Name:  secName,
-						insns: insns,
-						fd:    int(progFd),
-					}
 				case isTracepoint:
 					b.tracepointPrograms[secName] = &TracepointProgram{
 						Name:  secName,
@@ -692,7 +683,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 		isUretprobe := strings.HasPrefix(secName, "uretprobe/")
 		isCgroupSkb := strings.HasPrefix(secName, "cgroup/skb")
 		isCgroupSock := strings.HasPrefix(secName, "cgroup/sock")
-		isSocketFilter := strings.HasPrefix(secName, "socket")
 		isTracepoint := strings.HasPrefix(secName, "tracepoint/")
 		isSchedCls := strings.HasPrefix(secName, "sched_cls/")
 		isSchedAct := strings.HasPrefix(secName, "sched_act/")
@@ -711,8 +701,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 			progType = uint32(C.BPF_PROG_TYPE_CGROUP_SKB)
 		case isCgroupSock:
 			progType = uint32(C.BPF_PROG_TYPE_CGROUP_SOCK)
-		case isSocketFilter:
-			progType = uint32(C.BPF_PROG_TYPE_SOCKET_FILTER)
 		case isTracepoint:
 			progType = uint32(C.BPF_PROG_TYPE_TRACEPOINT)
 		case isSchedCls:
@@ -734,7 +722,7 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 			}
 		}
 
-		if isKprobe || isKretprobe || isUprobe || isUretprobe || isCgroupSkb || isCgroupSock || isSocketFilter || isTracepoint || isSchedCls || isSchedAct {
+		if isKprobe || isKretprobe || isUprobe || isUretprobe || isCgroupSkb || isCgroupSock || isTracepoint || isSchedCls || isSchedAct {
 			data, err := section.Data()
 			if err != nil {
 				return err
@@ -777,12 +765,6 @@ func (b *Module) Load(parameters map[string]SectionParams) error {
 				fallthrough
 			case isCgroupSock:
 				b.cgroupPrograms[secName] = &CgroupProgram{
-					Name:  secName,
-					insns: insns,
-					fd:    int(progFd),
-				}
-			case isSocketFilter:
-				b.socketFilters[secName] = &SocketFilter{
 					Name:  secName,
 					insns: insns,
 					fd:    int(progFd),

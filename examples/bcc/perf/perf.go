@@ -94,7 +94,7 @@ func main() {
 
 	// passing -1 for maxActive signifies to use the default
 	// according to the kernel kprobes documentation
-	err = m.AttachKprobe(syscallName, chownKprobe, -1)
+	err = m.AttachKprobe(syscallName, chownKprobe)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to attach kprobe__sys_fchownat: %s\n", err)
 		os.Exit(1)
@@ -108,7 +108,7 @@ func main() {
 
 	// passing -1 for maxActive signifies to use the default
 	// according to the kernel kretprobes documentation
-	err = m.AttachKretprobe(syscallName, chownKretprobe, -1)
+	err = m.AttachKretprobe(syscallName, chownKretprobe)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to attach kretprobe__sys_fchownat: %s\n", err)
 		os.Exit(1)

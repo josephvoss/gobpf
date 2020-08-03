@@ -93,12 +93,12 @@ int bpf_prog_detach(int prog_fd, int target_fd, enum bpf_attach_type type)
 
 int bpf_attach_socket(int sock, int fd)
 {
-	return setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &fd, sizeof(fd));
+	return setsockopt(sock, SOL_SOCKET, SO_ATTACH_FILTER, &fd, sizeof(fd));
 }
 
 int bpf_detach_socket(int sock, int fd)
 {
-	return setsockopt(sock, SOL_SOCKET, SO_DETACH_BPF, &fd, sizeof(fd));
+	return setsockopt(sock, SOL_SOCKET, SO_DETACH_FILTER, &fd, sizeof(fd));
 }
 
 int bpf_attach_xdp(const char *dev_name, int progfd, uint32_t flags)
